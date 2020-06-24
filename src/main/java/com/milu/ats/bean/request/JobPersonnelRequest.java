@@ -1,0 +1,38 @@
+package com.milu.ats.bean.request;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.hibernate.sql.Insert;
+import org.hibernate.sql.Update;
+
+import javax.validation.constraints.NotBlank;
+import java.util.List;
+
+/**
+ * @author max.chen
+ * @class
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@ApiModel(value = "职位保存请求实体", description = "保存职位")
+public class JobPersonnelRequest {
+    @NotBlank(message = "请填写招聘负责人", groups = {Insert.class})
+    @ApiModelProperty(value = "招聘负责人", notes = "张无忌")
+    private List<Easy> recruiter;
+    @NotBlank(message = "请填写业务负责人", groups = {Insert.class})
+    @ApiModelProperty(value = "业务负责人", notes = "殷天正")
+    private List<Easy> businesser;
+    @NotBlank(message = "请填写面试官", groups = {Insert.class})
+    @ApiModelProperty(value = "面试官", notes = "韦一笑")
+    private List<Easy> interviewer;
+    @NotBlank(message = "请填写面试协助人", groups = {Insert.class})
+    @ApiModelProperty(value = "协助人", notes = "五行旗")
+    private List<Easy> assistant;
+
+}
