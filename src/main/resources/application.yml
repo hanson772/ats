@@ -14,7 +14,7 @@ spring:
     database: mysql
     hibernate:
       ddl-auto: validate
-      #ddl-auto:update-
+      #ddl-auto:update validate
     show-sql: false
 
 
