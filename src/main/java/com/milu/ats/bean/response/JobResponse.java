@@ -30,5 +30,4 @@ public class JobResponse {
     private JobPersonnelRequest personnel;
     @ApiModelProperty(value = "渠道相关信息", notes = "xxxx")
     private List<JobChannelRequest> channel;
-
 }

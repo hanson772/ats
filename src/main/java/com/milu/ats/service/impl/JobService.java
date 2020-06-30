@@ -22,18 +22,17 @@ import com.milu.ats.service.IJobService;
 import com.milu.ats.util.Pooler;
 import com.milu.ats.util.Tools;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.usertype.CompositeUserType;
+import net.bytebuddy.asm.Advice;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
+import org.w3c.dom.stylesheets.LinkStyle;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import java.beans.Beans;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -63,6 +62,7 @@ public class JobService implements IJobService {
      * @param request
      * @return
      */
+    @Override
     public PageResponse<JobSearchResponse> searchByEmployee(Employee e, JobSearchRequest request){
         List<JobSearchResponse> result = new ArrayList<>();
         Integer pageNo = 1;
@@ -105,12 +105,15 @@ public class JobService implements IJobService {
      * @param jobId
      * @param request
      */
+    @Override
     public void saveJob(Employee e, int jobId, JobRequest request){
         JobDO entity = null;
         if(jobId > 0){
-            entity = findById(jobId);
+            entity = checkAuthForJob(e, jobId);
             entity.setUpdater(e.getOperator());
         } else {
+            // 管理员或招聘官才可以创建职位
+            checkRoleForJob(e);
             entity = JobDO.builder().build();
             entity.setCreator(e.getOperator());
         }
@@ -126,6 +129,7 @@ public class JobService implements IJobService {
      * @param jobId
      * @param request
      */
+    @Override
     public void savePersonnel(Employee e, int jobId, JobPersonnelRequest request){
         JobDO entity = checkAuthForJob(e, jobId);
         List<JobPersonnelDO> personnelDOS = new ArrayList<>();
@@ -166,6 +170,7 @@ public class JobService implements IJobService {
      * @param jobId
      * @param request
      */
+    @Override
     public void saveChannel(Employee e, int jobId, JobChannelRequest request){
         JobDO entity = checkAuthForJob(e, jobId);
         Optional<JobChannelDO> exist = jobChannelRepository.selectChannelByJobIdAndChannelId(entity.getId(), request.getChannelId());
@@ -185,6 +190,7 @@ public class JobService implements IJobService {
      * @param jobId
      * @param isOpen
      */
+    @Override
     public void change(Employee e, int jobId, boolean isOpen){
         JobDO entity = checkAuthForJob(e, jobId);
         jobRepository.switchSnap(entity.getId(), isOpen ? ELive.ENABLE.getCode() : ELive.DISABLE.getCode(), e.getOperator());
@@ -198,6 +204,7 @@ public class JobService implements IJobService {
      * @param isAll
      * @return
      */
+    @Override
     public JobResponse detail(Employee e, int jobId, boolean isAll){
         JobDO entity = checkReadAuthForJob(e, jobId);
         JobResponse response = JobResponse.builder()
@@ -329,19 +336,39 @@ public class JobService implements IJobService {
         Assert.notNull(entity, EMessage.JOB_NOT_EXIST.show());
         return entity;
     }
-    private void checkAuthForJob(Employee e){
-        //TODO
+    private void checkRoleForJob(Employee e){
+        Assert.isTrue(Arrays.asList(ERole.Recruiter, ERole.Manager).contains(e.getActive()), EMessage.AUTH_NO.show());
     }
     private JobDO checkAuthForJob(Employee e, int jobId){
         JobDO entity = findById(jobId);
-        checkAuthForJob(e);
+        // 校验是否可以编辑Job
+        checkRoleForJob(e);
+        // 如果不是创建者，判断是否是招聘负责人
+        if(!entity.getCreator().equals(e.getOperator())){
+            List<EPosition> positiones = getPositionForJob(e, jobId);
+            Assert.isTrue(positiones!= null && positiones.contains(EPosition.Recruiter), EMessage.AUTH_NO.show());
+        }
         return entity;
     }
     private JobDO checkReadAuthForJob(Employee e, int jobId){
         JobDO entity = jobId > 0 ? jobRepository.findById(jobId).orElse(null) : null;
         Assert.notNull(entity, EMessage.JOB_NOT_EXIST.show());
+        //checkAuthForJob(e);
 
-        checkAuthForJob(e);
         return entity;
+    }
+
+    /**
+     * 返回employee 在一个job 中的postion信息
+     * @param e
+     * @param jobId
+     * @return
+     */
+    private List<EPosition> getPositionForJob(Employee e, int jobId){
+        List<JobPersonnelDO> personnelS = jobPersonnelRepository.selectByJobId(jobId);
+        return personnelS.stream()
+                .filter(p-> p.getAccount().equalsIgnoreCase(e.getAccount()))
+                .map(x-> (EPosition)EPosition.Assistant.getByCode(x.getRole()))
+                .collect(Collectors.toList());
     }
 }
