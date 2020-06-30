@@ -8,18 +8,18 @@ import com.milu.ats.bean.pojo.Employee;
 import com.milu.ats.bean.request.SetRequest;
 import com.milu.ats.bean.response.SetResponse;
 import com.milu.ats.bean.response.SetTypeResponse;
+import com.milu.ats.bean.valid.Insert;
 import com.milu.ats.service.ISetService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.sql.Insert;
-import org.hibernate.sql.Update;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author max.chen
@@ -40,6 +40,12 @@ public class SetController {
         return ReturnVO.success(types);
     }
 
+    @GetMapping("/map")
+    @ApiOperation(value = "查询基础数据类型-map格式", notes = "返回所有基础数据类型-map格式显示")
+    public ReturnVO<Map<Integer, List<SetResponse>>> maps() {
+        Map<Integer, List<SetResponse>> maps = setService.allSetMap();
+        return ReturnVO.success(maps);
+    }
 
     @GetMapping("/list/{type}")
     @ApiOperation(value = "查询基础数据列表-仅有效", notes = "返回相关type类型下的所有基础数据值结合(仅有效基础数据)")
@@ -70,7 +76,7 @@ public class SetController {
     @AAuth(roles = {ERole.Manager})
     @ApiOperation(value = "更新基础数据", notes = "编辑基础数据")
     @ApiImplicitParam(paramType="path", name = "type", value = "当前SID值", required = true, dataType = "Integer")
-    public ReturnVO mgUpdate(@AHugh Employee e, @PathVariable("sId") Integer sId,  @Validated(value = {Update.class}) @RequestBody SetRequest request) {
+    public ReturnVO mgUpdate(@AHugh Employee e, @PathVariable("sId") Integer sId,  @Validated(value = {Insert.class}) @RequestBody SetRequest request) {
         setService.update(e, sId, request);
         return ReturnVO.success();
     }

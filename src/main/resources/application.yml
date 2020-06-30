@@ -1,6 +1,9 @@
+server:
+  port: 9401
+
 spring:
   profiles:
-    active: dev
+    active: tenxun
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://127.0.0.1:3306/ats?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&useSSL=true
@@ -8,23 +11,28 @@ spring:
     password: root
 
   jpa:
-    properties:
-      hibernate:
-        hbm2ddl:
-          auto: update
-        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
-        format_sql: true
-    show-sql: true
+    database: mysql
+    hibernate:
+      ddl-auto: update
+      #ddl-auto:update-
+    show-sql: false
 
 
 ---
 spring:
-  profiles: dev
-server:
-  port: 9401
+  profiles: local
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/ats?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&useSSL=true
+    username: root
+    password: root.123
+
 
 ---
 spring:
-  profiles: alpha
-server:
-  port: 9402
+  profiles: tenxun
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://106.53.237.108:3306/ats?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&useSSL=true
+    username: root
+    password: root.123

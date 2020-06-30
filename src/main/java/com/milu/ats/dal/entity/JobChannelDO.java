@@ -39,7 +39,7 @@ public class JobChannelDO extends AuditingDO {
     @Column(name = "channel_welfare", columnDefinition = "nvarchar(200) NOT NULL COMMENT '福利'")
     private String welfare;
 
-    @Column(name = "job_snap", columnDefinition = "tinyint(1) NULL DEFAULT 0 COMMENT '职位开放状态1、0'")
-    private Integer snap;
+    @Column(name = "channel_snap", columnDefinition = "bit(1) NULL DEFAULT 0 COMMENT '职位开放状态1、0'")
+    private Boolean snap;
 
 }

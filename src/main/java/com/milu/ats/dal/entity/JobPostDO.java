@@ -31,11 +31,6 @@ public class JobPostDO extends AuditingDO {
     @Column(name = "job_id", columnDefinition = "int(20) NOT NULL COMMENT '关联job'")
     private Integer jobId;
 
-/*    @Column(name = "resume_id", columnDefinition = "int(100) NOT NULL COMMENT '关联投递简历'")
-    private String resumeId;*/
-    /**
-     * EResumeSnap
-     */
     @Column(name = "resume_id", columnDefinition = "nvarchar(100) NOT NULL COMMENT '关联投递简历'")
-    private Integer snap;
+    private Integer resumeId;
 }

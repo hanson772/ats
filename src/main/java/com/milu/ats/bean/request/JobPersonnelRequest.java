@@ -1,13 +1,12 @@
 package com.milu.ats.bean.request;
 
+import com.milu.ats.bean.valid.Insert;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.sql.Insert;
-import org.hibernate.sql.Update;
 
 import javax.validation.constraints.NotBlank;
 import java.util.List;

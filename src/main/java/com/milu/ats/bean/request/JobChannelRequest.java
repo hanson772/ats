@@ -1,6 +1,7 @@
 package com.milu.ats.bean.request;
 
 import com.milu.ats.bean.enums.ELive;
+import com.milu.ats.bean.valid.Insert;
 import com.milu.ats.dal.entity.JobChannelDO;
 import com.milu.ats.util.Tools;
 import io.swagger.annotations.ApiModel;
@@ -9,8 +10,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.sql.Insert;
-
 import javax.validation.constraints.NotBlank;
 
 /**
@@ -42,7 +41,7 @@ public class JobChannelRequest {
                 .channelId(entity.getChannelId())
                 .age(entity.getAge())
                 .welfare(entity.getWelfare())
-                .snap(entity.getSnap() == ELive.ENABLE.getCode())
+                .snap(entity.getSnap())
                 .build();
     }
 }

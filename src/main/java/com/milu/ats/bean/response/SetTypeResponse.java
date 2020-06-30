@@ -21,10 +21,9 @@ public class SetTypeResponse extends Hash{
     private String display;
 
     public static SetTypeResponse fromEnum(ESet eSet){
-        SetTypeResponse response = (SetTypeResponse)Hash.builder()
-                .key(String.valueOf(eSet.getType()))
-                .value(eSet.getCode())
-                .build();
+        SetTypeResponse response = new SetTypeResponse();
+        response.setKey(String.valueOf(eSet.getType()));
+        response.setValue(eSet.getCode());
         response.setDisplay(eSet.getDisplay());
         return response;
     }

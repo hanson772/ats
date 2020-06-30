@@ -53,7 +53,7 @@ public abstract class AuditingDO implements Serializable {
     /**
      * 生存状态
      */
-    @Column(name = "live", nullable = false, columnDefinition = "int default 1 COMMENT '生存状态（1：有效，0：失效）'")
+    @Column(name = "live", nullable = false, columnDefinition = "smallint(2) default 1 COMMENT '生存状态（1：有效，0：失效）'")
     private Integer live = 1;
 
     /**

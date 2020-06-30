@@ -84,7 +84,7 @@ public class JobService implements IJobService {
                 count = countTask.get();
             } catch (Exception ex) {
                 ex.printStackTrace();
-                log.info("搜索Job职位出错：{}", ex.getMessage());
+                log.error("搜索Job职位出错：{}", ex.getMessage());
                 Assert.isTrue(false, ex.getMessage());
             } finally {
                 entityManager.close();
@@ -177,7 +177,7 @@ public class JobService implements IJobService {
         JobChannelDO channel = exist.isPresent()? exist.get() : JobChannelDO.builder().build();
         channel.setAge(request.getAge());
         channel.setChannelId(request.getChannelId());
-        channel.setSnap(request.isSnap() ? ELive.ENABLE.getCode() :ELive.DISABLE.getCode());
+        channel.setSnap(request.isSnap());
         channel.setCreator(e.getOperator());
 
         jobChannelRepository.saveAndFlush(channel);
@@ -194,7 +194,7 @@ public class JobService implements IJobService {
     public void change(Employee e, int jobId, boolean isOpen){
         JobDO entity = checkAuthForJob(e, jobId);
         jobRepository.switchSnap(entity.getId(), isOpen ? ELive.ENABLE.getCode() : ELive.DISABLE.getCode(), e.getOperator());
-        log.info("职位-{}-更新开放状态-{}-{}", entity.getDisplay(), entity.getSnap() == ELive.ENABLE.getCode() ? "开启" :"关闭", e.getOperator());
+        log.info("职位-{}-更新开放状态-{}-{}", entity.getDisplay(), entity.getSnap() ? "开启" :"关闭", e.getOperator());
     }
 
     /**
@@ -270,7 +270,7 @@ public class JobService implements IJobService {
             paras.put("dept", request.getDept());
         }
         // 查询岗位类别
-        if(request.getCategory() > 0){
+        if(request.getCategory() != null && request.getCategory() > 0){
             sb.append(" and j.category = :category");
             paras.put("category", request.getCategory());
         }

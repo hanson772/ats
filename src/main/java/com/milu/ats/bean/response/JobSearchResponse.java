@@ -32,8 +32,8 @@ public class JobSearchResponse {
     @ApiModelProperty(value = "招聘协助人", notes = "张无忌,张三丰")
     private String assistant;
 
-    @ApiModelProperty(value = "招聘状态", notes = "1:招聘中； 其他: 关闭")
-    private Integer snap;
+    @ApiModelProperty(value = "招聘状态", notes = "true:招聘中； false: 关闭")
+    private Boolean snap;
     @ApiModelProperty(value = "职位创建时间", notes = "1592878147")
     private long created;
     @ApiModelProperty(value = "职位关闭时间", notes = "1592878147")

@@ -17,7 +17,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -39,6 +41,15 @@ public class SetService implements ISetService {
     @Override
     public List<SetTypeResponse> allSetTypes(){
         return Arrays.stream(ESet.values()).map(e-> SetTypeResponse.fromEnum(e)).collect(Collectors.toList());
+    }
+
+    /**
+     * 返回全部的types，（map格式）
+     * @return
+     */
+    @Override
+    public Map<Integer, List<SetResponse>> allSetMap(){
+        return cacheSetValueAll(false).stream().map(s-> SetResponse.fromDO(s)).collect(Collectors.groupingBy(SetResponse::getType));
     }
 
     /**
@@ -70,7 +81,7 @@ public class SetService implements ISetService {
 
         SetDO entity = SetDO.builder().type(request.getType())
                 .code(request.getCode())
-                .display(request.getDispaly())
+                .display(request.getDisplay())
                 .description(request.getDescription())
                 .build();
 
@@ -92,7 +103,8 @@ public class SetService implements ISetService {
 
         SetDO entity = setRepository.findById(sid).orElse(null);
         Assert.notNull(entity, EMessage.SET_NOT_EXIST.show());
-        entity.setDisplay(request.getDispaly());
+        entity.setDisplay(request.getDisplay());
+        entity.setCode(request.getCode());
         entity.setDescription(request.getDescription());
         entity.setUpdater(e.getOperator());
         setRepository.saveAndFlush(entity);
@@ -116,7 +128,7 @@ public class SetService implements ISetService {
         // 如果已切换Set状态，不需要继续执行
         int newLive = isLive? ELive.ENABLE.getCode() : ELive.DISABLE.getCode();
         if(entity.getLive() != newLive){
-            setRepository.switchSetLive(entity.getId(),  newLive, entity.getLive(), e.getOperator());
+            int n = setRepository.switchSetLive(entity.getId(), entity.getLive(), newLive, e.getOperator());
             cacheSetValueAll(true);
         }
     }

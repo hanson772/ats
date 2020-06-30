@@ -6,6 +6,7 @@ import com.milu.ats.bean.response.SetResponse;
 import com.milu.ats.bean.response.SetTypeResponse;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author max.chen
@@ -13,6 +14,8 @@ import java.util.List;
  */
 public interface ISetService {
     List<SetTypeResponse> allSetTypes();
+
+    Map<Integer, List<SetResponse>> allSetMap();
 
     List<SetResponse> allSetsByType(boolean isAll, int type);
 

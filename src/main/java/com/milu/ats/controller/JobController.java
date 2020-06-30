@@ -5,24 +5,23 @@ import com.milu.ats.annotation.AHugh;
 import com.milu.ats.bean.ReturnVO;
 import com.milu.ats.bean.enums.ERole;
 import com.milu.ats.bean.pojo.Employee;
-import com.milu.ats.bean.request.*;
-import com.milu.ats.bean.response.*;
+import com.milu.ats.bean.request.JobChannelRequest;
+import com.milu.ats.bean.request.JobPersonnelRequest;
+import com.milu.ats.bean.request.JobRequest;
+import com.milu.ats.bean.request.JobSearchRequest;
+import com.milu.ats.bean.response.JobResponse;
+import com.milu.ats.bean.response.JobSearchResponse;
+import com.milu.ats.bean.response.PageResponse;
+import com.milu.ats.bean.valid.Insert;
 import com.milu.ats.service.IJobService;
-import com.milu.ats.service.ISetService;
 import com.milu.ats.util.Tools;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.sql.Insert;
-import org.hibernate.sql.Update;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.lang.UsesSunHttpServer;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import javax.servlet.annotation.ServletSecurity;
-import java.util.List;
 
 /**
  * @author max.chen
@@ -43,34 +42,37 @@ public class JobController {
     }
 
     @PostMapping("/save/job/{jobID}")
-
+    @AAuth(roles = {ERole.Manager, ERole.Recruiter})
     @ApiOperation(value = "保存职位-主信息", notes = "保存、编辑职位基础信息")
     @ApiImplicitParam(paramType="path", name = "jobID", value = "0：新建职位，其他：编辑已存在职位的ID", required = true, dataType = "String")
-    public ReturnVO saveJob(@AHugh Employee e, @PathVariable("jobID") String jobID, @RequestBody JobRequest request) {
+    public ReturnVO saveJob(@AHugh Employee e, @PathVariable("jobID") String jobID, @Validated(value = {Insert.class})  @RequestBody JobRequest request) {
         int jobId = Tools.idDecode(jobID);
         jobService.saveJob(e, jobId, request);
         return ReturnVO.success();
     }
 
     @PostMapping("/save/personnel/{jobID}")
+    @AAuth(roles = {ERole.Manager, ERole.Recruiter})
     @ApiOperation(value = "保存职位-负责人", notes = "保存、编辑职位-相关负责人信息")
     @ApiImplicitParam(paramType="path", name = "jobID", value = "已存在职位的ID", required = true, dataType = "String")
-    public ReturnVO savePersonnel(@AHugh Employee e, @PathVariable("jobID") String jobID, @RequestBody JobPersonnelRequest request) {
+    public ReturnVO savePersonnel(@AHugh Employee e, @PathVariable("jobID") String jobID, @Validated(value = {Insert.class}) @RequestBody JobPersonnelRequest request) {
         int jobId = Tools.idDecode(jobID);
         jobService.savePersonnel(e, jobId, request);
         return ReturnVO.success();
     }
 
     @PostMapping("/save/channel/{jobID}")
+    @AAuth(roles = {ERole.Manager, ERole.Recruiter})
     @ApiOperation(value = "保存职位-渠道信息", notes = "保存、编辑职位-渠道信息")
     @ApiImplicitParam(paramType="path", name = "jobID", value = "已存在职位的ID", required = true, dataType = "String")
-    public ReturnVO saveChannel(@AHugh Employee e, @PathVariable("jobID") String jobID, @RequestBody JobChannelRequest request) {
+    public ReturnVO saveChannel(@AHugh Employee e, @PathVariable("jobID") String jobID, @Validated(value = {Insert.class}) @RequestBody JobChannelRequest request) {
         int jobId = Tools.idDecode(jobID);
         jobService.saveChannel(e, jobId, request);
         return ReturnVO.success();
     }
 
     @PutMapping("/open/{jobID}")
+    @AAuth(roles = {ERole.Manager, ERole.Recruiter})
     @ApiOperation(value = "放开职位", notes = "放开职位")
     @ApiImplicitParam(paramType="path", name = "jobID", value = "已存在职位的ID", required = true, dataType = "String")
     public ReturnVO openJob(@AHugh Employee e, @PathVariable("jobID") String jobID) {
@@ -80,6 +82,7 @@ public class JobController {
     }
 
     @PutMapping("/close/{jobID}")
+    @AAuth(roles = {ERole.Manager, ERole.Recruiter})
     @ApiOperation(value = "关闭职位", notes = "关闭职位")
     @ApiImplicitParam(paramType="path", name = "jobID", value = "已存在职位的ID", required = true, dataType = "String")
     public ReturnVO closeJob(@AHugh Employee e, @PathVariable("jobID") String jobID) {
