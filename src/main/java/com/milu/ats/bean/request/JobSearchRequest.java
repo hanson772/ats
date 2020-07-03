@@ -1,5 +1,6 @@
 package com.milu.ats.bean.request;
 
+import com.milu.ats.bean.pojo.PageBase;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -21,6 +22,9 @@ public class JobSearchRequest extends PageBase {
     private String display;
     @ApiModelProperty(value = "部门", notes = "技术研究中心")
     private String dept;
-    @ApiModelProperty(value = "岗位类别", notes = "111")
-    private Integer category;
+    @ApiModelProperty(value = "岗位类别", notes = "RD")
+    private String category;
+    @ApiModelProperty(value = "地点", notes = "SHANGHAI")
+    private String location;
+
 }

@@ -15,5 +15,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class JobPostVO {
     Integer jobId;
-    Integer post;
+    Integer snap;
+    Long count;
 }

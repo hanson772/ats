@@ -1,6 +1,6 @@
 package com.milu.ats.bean.response;
 
-import com.milu.ats.bean.request.PageBase;
+import com.milu.ats.bean.pojo.PageBase;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;

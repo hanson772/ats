@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
+ * 角色
  * @author max.chen
  * @class
  */

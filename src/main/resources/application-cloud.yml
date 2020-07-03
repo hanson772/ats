@@ -1,0 +1,11 @@
+spring:
+  profiles: cloud
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://106.53.237.108:3306/ats?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&useSSL=true
+    username: root
+    password: root.1111
+
+  servlet:
+    multipart:
+      location: /Users/haidi.chen/Documents/temp/tmp

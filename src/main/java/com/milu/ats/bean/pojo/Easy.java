@@ -1,4 +1,4 @@
-package com.milu.ats.bean.request;
+package com.milu.ats.bean.pojo;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;

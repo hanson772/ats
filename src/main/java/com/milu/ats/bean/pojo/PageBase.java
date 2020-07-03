@@ -1,4 +1,4 @@
-package com.milu.ats.bean.request;
+package com.milu.ats.bean.pojo;
 
 import lombok.Data;
 

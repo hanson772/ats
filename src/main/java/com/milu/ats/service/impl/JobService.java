@@ -1,10 +1,11 @@
 package com.milu.ats.service.impl;
 
-import com.milu.ats.bean.enums.ELive;
+import com.milu.ats.bean.pojo.Easy;
 import com.milu.ats.bean.enums.EPosition;
 import com.milu.ats.bean.enums.ERole;
 import com.milu.ats.bean.pojo.EMessage;
 import com.milu.ats.bean.pojo.Employee;
+import com.milu.ats.bean.pojo.SearchBase;
 import com.milu.ats.bean.request.*;
 import com.milu.ats.bean.response.JobResponse;
 import com.milu.ats.bean.response.JobSearchResponse;
@@ -19,22 +20,18 @@ import com.milu.ats.dal.repository.JobPersonnelRepository;
 import com.milu.ats.dal.repository.JobPostRepository;
 import com.milu.ats.dal.repository.JobRepository;
 import com.milu.ats.service.IJobService;
-import com.milu.ats.util.Pooler;
+import com.milu.ats.service.ISearchService;
 import com.milu.ats.util.Tools;
 import lombok.extern.slf4j.Slf4j;
-import net.bytebuddy.asm.Advice;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
-import org.w3c.dom.stylesheets.LinkStyle;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
@@ -53,6 +50,8 @@ public class JobService implements IJobService {
     @Autowired
     JobChannelRepository jobChannelRepository;
 
+    @Autowired
+    ISearchService searchService;
     @PersistenceContext
     private EntityManager entityManager;
 
@@ -63,40 +62,20 @@ public class JobService implements IJobService {
      * @return
      */
     @Override
-    public PageResponse<JobSearchResponse> searchByEmployee(Employee e, JobSearchRequest request){
-        List<JobSearchResponse> result = new ArrayList<>();
-        Integer pageNo = 1;
-        Integer pageSize = 10;
-        Integer count = 0;
-        if (request != null) {
-            pageNo = request.getPageNo() == null ? pageNo : request.getPageNo();
-            pageSize = request.getPageSize() == null ? pageSize : request.getPageSize();
-            try {
-                TypedQuery<JobDO> countQuery = buildPurOrderQuery(e, request);
-                CompletableFuture<Integer> countTask = Pooler.async(() -> {
-                    return countQuery.getResultList().size();
-                });
+    public PageResponse<JobSearchResponse> searchByEmployee(Employee e, JobSearchRequest request, boolean isEdit){
+        SearchBase<JobDO> searchQuery = buildJobQuery(e, request, isEdit);
+        searchQuery.setPageNo(request.getPageNo());
+        searchQuery.setPageSize(request.getPageSize());
 
-                TypedQuery<JobDO> query = buildPurOrderQuery(e, request);
-                query.setFirstResult(pageSize * (pageNo - 1));
-                query.setMaxResults(pageSize);
-                result = toSearchResponse(query.getResultList());
-                count = countTask.get();
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                log.error("搜索Job职位出错：{}", ex.getMessage());
-                Assert.isTrue(false, ex.getMessage());
-            } finally {
-                entityManager.close();
-            }
-        }
+        PageResponse<JobDO> csr = searchService.searchByPage(searchQuery);
 
-        PageResponse csr = new PageResponse();
-        csr.setCount(count);
-        csr.setList(result);
-        csr.setPageNo(pageNo);
-        csr.setPageSize(pageSize);
-        return csr;
+        PageResponse<JobSearchResponse> response = new PageResponse();
+        response.setCount(csr.getCount());
+        response.setList(toSearchResponse(csr.getList()));
+        response.setPageNo(csr.getPageNo());
+        response.setPageSize(csr.getPageSize());
+
+        return response;
     }
 
     /**
@@ -119,6 +98,7 @@ public class JobService implements IJobService {
         }
 
         BeanUtils.copyProperties(request, entity);
+        entity.setSnap(false);
         jobRepository.saveAndFlush(entity);
         log.info("职位-{}-保存-{}", entity.getDisplay(), e.getOperator());
     }
@@ -156,7 +136,7 @@ public class JobService implements IJobService {
         });
 
         // 移除之前设置的负责人列表
-        jobPersonnelRepository.removeByJobId(entity.getId());
+        int n = jobPersonnelRepository.removeByJobId(entity.getId());
         if(!personnelDOS.isEmpty()) {
             // 保存新的负责人列表
             jobPersonnelRepository.saveAll(personnelDOS);
@@ -193,9 +173,17 @@ public class JobService implements IJobService {
     @Override
     public void change(Employee e, int jobId, boolean isOpen){
         JobDO entity = checkAuthForJob(e, jobId);
-        jobRepository.switchSnap(entity.getId(), isOpen ? ELive.ENABLE.getCode() : ELive.DISABLE.getCode(), e.getOperator());
+        jobRepository.switchSnap(entity.getId(), isOpen, e.getOperator());
         log.info("职位-{}-更新开放状态-{}-{}", entity.getDisplay(), entity.getSnap() ? "开启" :"关闭", e.getOperator());
     }
+
+    @Override
+    public JobDO findById(int jobId){
+        return checkJobExist(jobId);
+    }
+
+
+
 
     /**
      *
@@ -232,32 +220,21 @@ public class JobService implements IJobService {
      * 构建查询job职位SQL
      * @param e
      * @param request
+     * @param isEdit 是否是编辑查询（只查询自己关联的job)
      * @return
      */
-    private TypedQuery<JobDO> buildPurOrderQuery(Employee e, JobSearchRequest request){
+    private SearchBase buildJobQuery(Employee e, JobSearchRequest request, boolean isEdit){
         StringBuilder sb = new StringBuilder();
-        Map<String, Object> paras = new HashMap<>(12);
-        sb.append("select j from JobDO j ");
-        switch (e.getActive()){
-            case Recruiter:
-                sb.append("inner join JobPersonnelDO p on p.jobId = j.id and j.account =:account and j.role in (:roles)");
-                paras.put("account", e.getAccount());
-                paras.put("roles", Arrays.asList(EPosition.Recruiter.getCode(), ERole.Assistant.getCode()));
-                break;
-            case Interviewer:
-                sb.append("inner join JobPersonnelDO p on p.jobId = j.id and j.account =:account and j.role =:roles");
-                paras.put("account", e.getAccount());
-                paras.put("roles", EPosition.Interviewer.getCode());
-                break;
-            case Assistant:
-                sb.append("inner join JobPersonnelDO p on p.jobId = j.id and j.account =:account and j.role =:roles");
-                paras.put("account", e.getAccount());
-                paras.put("roles", EPosition.Assistant.getCode());
-                break;
-            default:
-                break;
+        Map<String, Object> paras = new HashMap<>(20);
+        sb.append("select j from JobDO j where j.live = 1 ");
+
+        if(isEdit){
+            // 如果是编辑查询，非管理员和招聘负责人不能查询任何职位
+            if(e.getActive() != ERole.Recruiter && e.getActive() != ERole.Manager){
+                sb.append(" and j.id = 0");
+                return new SearchBase<JobDO>(sb, paras, JobDO.class);
+            }
         }
-        sb.append("where j.live = 1");
 
         // 查询职位名称
         if(StringUtils.hasText(request.getDisplay())){
@@ -270,18 +247,31 @@ public class JobService implements IJobService {
             paras.put("dept", request.getDept());
         }
         // 查询岗位类别
-        if(request.getCategory() != null && request.getCategory() > 0){
+        if(StringUtils.hasText(request.getCategory())){
             sb.append(" and j.category = :category");
             paras.put("category", request.getCategory());
         }
-
-        sb.append(" order by j.created desc");
-        TypedQuery<JobDO> query = entityManager.createQuery(sb.toString(), JobDO.class);
-        for (String param : paras.keySet()) {
-            query.setParameter(param, paras.get(param));
+        // 查询地点
+        if(StringUtils.hasText(request.getLocation())){
+            sb.append(" and j.location = :location");
+            paras.put("location", request.getLocation());
         }
 
-        return query;
+        // 编辑阶段
+        if(isEdit){
+            // 只能查询自己相关的职位, 管理员查阅所有
+            if(e.getActive() == ERole.Recruiter) {
+                sb.append(" and j.id in ( select p.jobId from JobPersonnelDO p where p.account =:account)");
+                paras.put("account", e.getAccount());
+            }
+        } else {
+            // 非编辑阶段可以查询公开的职位
+            sb.append(" and j.snap = 1");
+        }
+
+        sb.append(" order by j.created desc");
+
+        return new SearchBase<JobDO>(sb, paras, JobDO.class);
     }
 
     /**
@@ -293,16 +283,16 @@ public class JobService implements IJobService {
         List<JobSearchResponse> list = new ArrayList<>();
         if(!result.isEmpty()){
             List<Integer> jobIds = result.stream().map(x-> x.getId()).collect(Collectors.toList());
-            Map<Integer, Integer> postMap = jobPostRepository.totalByJobIds(jobIds).stream()
-                    .collect(Collectors.toMap(JobPostVO::getJobId, JobPostVO::getPost));;
+            Map<Integer, Long> postMap = jobPostRepository.totalByJobIds(jobIds).stream()
+                    .collect(Collectors.toMap(JobPostVO::getJobId, JobPostVO::getCount));
             Map<String, String> personnelMap = jobPersonnelRepository.selectGroupRoleByJobIds(jobIds).stream()
+                    .map(o-> new JobPersonnelVO(Integer.valueOf(o[0].toString()), Integer.valueOf(o[1].toString()), o[2].toString()))
                     .collect(Collectors.toMap(v-> v.getJobId()+"-"+v.getRole(), JobPersonnelVO::getDisplay ));
-
 
             result.forEach(r->{
                 JobSearchResponse response = JobSearchResponse.fromDO(r);
                 // 设置候选人数量
-                response.setCandidateQuantity(postMap.getOrDefault(r.getId(), 0));
+                response.setCandidateQuantity(postMap.getOrDefault(r.getId(), 0L).intValue());
                 // 设置招聘负责人
                 response.setRecruiter(personnelMap.getOrDefault(r.getId()+"-"+ EPosition.Recruiter.getCode(), ""));
                 // 设置业务负责人
@@ -331,7 +321,7 @@ public class JobService implements IJobService {
      * 检验是否可以操作job职位
      * @param
      */
-    private JobDO findById(int jobId){
+    private JobDO checkJobExist(int jobId){
         JobDO entity = jobId > 0 ? jobRepository.findById(jobId).orElse(null) : null;
         Assert.notNull(entity, EMessage.JOB_NOT_EXIST.show());
         return entity;
@@ -351,12 +341,12 @@ public class JobService implements IJobService {
         return entity;
     }
     private JobDO checkReadAuthForJob(Employee e, int jobId){
-        JobDO entity = jobId > 0 ? jobRepository.findById(jobId).orElse(null) : null;
-        Assert.notNull(entity, EMessage.JOB_NOT_EXIST.show());
+        JobDO entity = checkJobExist(jobId);
         //checkAuthForJob(e);
 
         return entity;
     }
+
 
     /**
      * 返回employee 在一个job 中的postion信息

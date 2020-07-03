@@ -5,6 +5,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
 
 /**
+ * 属性配置
  * @author max.chen
  * @class
  */

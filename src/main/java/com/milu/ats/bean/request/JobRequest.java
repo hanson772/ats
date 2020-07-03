@@ -3,6 +3,7 @@ package com.milu.ats.bean.request;
 import com.milu.ats.bean.enums.ELive;
 import com.milu.ats.bean.valid.Insert;
 import com.milu.ats.dal.entity.JobDO;
+import com.milu.ats.util.Tools;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -23,6 +24,8 @@ import javax.validation.constraints.NotBlank;
 @AllArgsConstructor
 @ApiModel(value = "职位保存请求实体", description = "保存职位")
 public class JobRequest {
+    @ApiModelProperty(value = "id", notes = "1asd123as3324321")
+    private String id;
     @NotBlank(message = "请填写职位名称", groups = {Insert.class})
     @Length(max = 50, message = "职位名称最多支持输入50个字符", groups = {Insert.class})
     @ApiModelProperty(value = "职位", notes = "高级产品经理")
@@ -49,7 +52,7 @@ public class JobRequest {
     private String salaryEnd;
     @ApiModelProperty(value = "工作地点", notes = "上海, set-type:101")
     private String location;
-    @ApiModelProperty(value = "职位描述", notes = "xxxxxxxxxxxx")
+    @ApiModelProperty(value = "职位描述-jd", notes = "xxxxxxxxxxxx")
     private String description;
     @ApiModelProperty(value = "招聘状态", notes = "true/false")
     private boolean snap;
@@ -57,6 +60,7 @@ public class JobRequest {
 
     public static JobRequest fromDO(JobDO entity){
         return JobRequest.builder()
+                .id(Tools.idEncode(entity.getId()))
                 .display(entity.getDisplay())
                 .dept(entity.getDept())
                 .rank(entity.getRank())

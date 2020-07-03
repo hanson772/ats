@@ -23,7 +23,7 @@ public class JobSearchResponse {
     private String id;
     @ApiModelProperty(value = "职位", notes = "高级产品经理")
     private String display;
-    @ApiModelProperty(value = "候选人数量", notes = "技术研究中心")
+    @ApiModelProperty(value = "候选人数量", notes = "100")
     private Integer candidateQuantity;
     @ApiModelProperty(value = "招聘负责人", notes = "张无忌,张三丰")
     private String recruiter;

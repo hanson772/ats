@@ -1,9 +1,11 @@
 server:
   port: 9401
+  servlet:
+    context-path: /api/v1/
 
 spring:
   profiles:
-    active: local
+    active: cloud
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://127.0.0.1:3306/ats?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&useSSL=true
@@ -12,12 +14,28 @@ spring:
 
   jpa:
     database: mysql
+    properties:
+      hibernate:
+        hibernate: true
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
       #ddl-auto:update validate
-    show-sql: false
+    show-sql: true
 
+  servlet:
+    multipart:
+      file-size-threshold: 0
+      location: /data/app/tmp
+      max-file-size: 30MB
+      max-request-size: 30MB
 
+# 简历附件上传格式校验
+validity:
+  attach:
+    ext:
+      allowed: "key,numbers,pages,xls"
+    mime:
+      allowed: "image/jpeg,image/png,pdf,text/plain,video/mp4,zip,x-rar-compressed,vnd.apple,vnd.openxmlformats,vnd.ms-powerpoint,vnd.ms-excel,msword,wps-writer,x-rar"
 ---
 spring:
   profiles: local
@@ -25,4 +43,8 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://127.0.0.1:3306/ats?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&useSSL=true
     username: root
-    password: root
+    password: root.1111
+
+  servlet:
+    multipart:
+      location: /data/app/tmp

@@ -1,6 +1,5 @@
 package com.milu.ats.config;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -14,8 +13,7 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 @EnableSwagger2
 @Configuration
-@ConditionalOnProperty(name = "swagger.enable", havingValue = "true")
-@Profile({"dev", "local", "alpha"})
+@Profile({"cloud", "local", "alpha"})
 public class Swagger2Config {
 
     @Bean
